@@ -87,6 +87,6 @@ Browse to: **http://localhost:8000**
 ---
 
 ## 📣 About the author
-**Built by [Your Name]** — a F1 fan and developer building real-time race intelligence tooling.
+**Built by Udit Srivastava** — a F1 fan and developer building real-time race intelligence tooling.
 
 Feel free to fork, tweak, and share! 🚀
