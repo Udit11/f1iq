@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1IQ — Intelligence Platform</title>
+<link rel="stylesheet" href="/static/css/main.css?v=20260316c">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">F1<em>IQ</em></div>
+  <div class="top-sep"></div>
+  <div class="nav-tab active"  onclick="go('dash',this)">Dashboard</div>
+  <div class="nav-tab"         onclick="go('tower',this)">Live Tower</div>
+  <div class="nav-tab"         onclick="go('strategy',this)">Pit Strategy</div>
+  <div class="nav-tab"         onclick="go('predictor',this)">Race Predictor</div>
+  <div class="nav-tab"         onclick="go('standings',this)">Standings</div>
+  <div class="nav-tab"         onclick="go('schedule',this)">Schedule</div>
+  <div class="nav-tab"         onclick="go('weekend',this)">Race Weekend</div>
+  <div class="nav-tab"         onclick="go('telemetry',this)">Telemetry</div>
+  <div class="nav-tab"         onclick="go('debrief',this)">Race Debrief</div>
+  <div class="topbar-right">
+    <div class="live-pill" id="ws-pill">
+      <div class="live-dot off" id="ws-dot"></div>
+      <span id="ws-label">CONNECTING</span>
+    </div>
+    <div>
+      <div class="race-name" id="top-race">2026 Japanese Grand Prix</div>
+      <div class="race-sub"><span id="top-sub">—</span>&nbsp;·&nbsp;<span id="top-clk"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="panel active" id="panel-dash">
+  <div class="sec-head">
+    <div class="sec-title">Race Overview</div>
+    <div class="chip" id="dash-sc-chip">—</div>
+    <div class="chip ch-blue" id="dash-lap-chip">—</div>
+    <div class="chip ch-blue">2026 Season</div>
+    <div class="sec-right">OpenF1 · FastF1 · Ergast/Jolpica</div>
+  </div>
+  <div class="dash-outer">
+    <div class="stat-row">
+      <div class="stat-card">
+        <span class="stat-val" id="s-lap" style="color:var(--red)">—</span>
+        <div class="stat-lbl">Current Lap</div>
+        <div class="stat-sub sub-neu" id="s-lap-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="s-fl" style="font-size:18px">—</span>
+        <div class="stat-lbl">Fastest Lap</div>
+        <div class="stat-sub sub-up" id="s-fl-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="s-speed">—</span>
+        <div class="stat-lbl">Top Speed km/h</div>
+        <div class="stat-sub sub-neu" id="s-speed-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="s-status">—</span>
+        <div class="stat-lbl">Track Status</div>
+        <div class="stat-sub" id="s-status-sub">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="s-pits">—</span>
+        <div class="stat-lbl">In Pit Lane</div>
+        <div class="stat-sub sub-neu">This lap</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="s-temp">—</span>
+        <div class="stat-lbl">Air Temp</div>
+        <div class="stat-sub sub-neu" id="s-temp-sub">—</div>
+      </div>
+    </div>
+    <div class="dash-cols">
+      <div class="card">
+        <div class="card-hd">▶ Live Standings — Top 10
+          <span class="card-hd-link" onclick="go('tower',document.querySelectorAll('.nav-tab')[1])">Full Tower →</span>
+        </div>
+        <div class="card-bd" style="padding:8px">
+          <div class="mini-tower" id="mini-tower"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+      <div class="centre-col">
+        <div class="card">
+          <div class="card-hd">⚡ Fastest Lap &amp; Sector Times</div>
+          <div class="card-bd" id="fl-card"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">📈 Gap to Leader — Top 5</div>
+          <div class="card-bd"><div class="chart-h200"><canvas id="dashGapChart"></canvas></div></div>
+        </div>
+      </div>
+      <div class="right-col">
+        <div class="card">
+          <div class="card-hd">🌤 Weather &amp; Track</div>
+          <div class="card-bd" id="weather-card"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">🏆 Win Probability
+            <span class="card-hd-link" onclick="go('predictor',document.querySelectorAll('.nav-tab')[3])">Full Model →</span>
+          </div>
+          <div class="card-bd" id="dash-probs"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">🔧 Tyre Alert — Pit Windows
+            <span class="card-hd-link" onclick="go('strategy',document.querySelectorAll('.nav-tab')[2])">Strategy →</span>
+          </div>
+          <div class="card-bd" id="dash-pits"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd">📻 Race Control</div>
+          <div class="card-bd" style="padding:8px" id="rc-card"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LIVE TOWER ═══ -->
+<div class="panel" id="panel-tower">
+  <div class="sec-head">
+    <div class="sec-title">Live Timing Tower</div>
+    <div class="chip" id="tower-sc-chip">—</div>
+    <div class="chip ch-blue" id="tower-lap-chip">—</div>
+    <div class="sec-right" id="tower-updated">—</div>
+  </div>
+  <div class="tower-outer">
+    <div class="tower-hd">
+      <span>P</span><span></span><span>Driver</span><span>Name / Team</span>
+      <span>Gap</span><span>Interval</span><span>Best Lap</span>
+      <span>Tyre / Age</span><span>DRS</span><span>Last Lap</span>
+    </div>
+    <div class="tower-body" id="tower-body">
+      <div class="loading"><div class="spinner"></div>Connecting to live timing...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PIT STRATEGY ═══ -->
+<div class="panel" id="panel-strategy">
+  <div class="sec-head">
+    <div class="sec-title">Pit Strategy Optimizer</div>
+    <div class="chip ch-blue" id="strat-lap-chip">—</div>
+    <div class="chip ch-green">Live Stint Data</div>
+    <div class="sec-right">Degradation model · Undercut &amp; Overcut windows</div>
+  </div>
+  <div class="strat-outer" id="strat-body">
+    <div class="loading"><div class="spinner"></div>Loading strategy data...</div>
+  </div>
+</div>
+
+<!-- ═══ WIN PREDICTOR ═══ -->
+<div class="panel" id="panel-predictor">
+  <div class="sec-head">
+    <div class="sec-title">Race Win Predictor</div>
+    <div class="chip ch-blue">Live Feature Model</div>
+    <div class="chip ch-green" id="pred-conf-chip">—</div>
+    <div class="sec-right">Track position · Tyre life · Gap · Pace · Pit risk · Safety car</div>
+  </div>
+  <div class="pred-outer">
+    <div class="pred-grid">
+      <div class="pred-card" style="grid-column:1/-1">
+        <div class="pred-title">Win Probability — Current Lap</div>
+        <div id="full-probs"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Lap Time Delta vs Leader (s)</div>
+        <div class="chart-h260"><canvas id="lapDeltaChart"></canvas></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Predictor Feature Importance (%)</div>
+        <div class="chart-h260"><canvas id="featureChart"></canvas></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Tyre Life — Laps on Current Compound</div>
+        <div class="chart-h200"><canvas id="tyreChart"></canvas></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Position History — Top 5</div>
+        <div class="chart-h200"><canvas id="posChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STANDINGS ═══ -->
+<div class="panel" id="panel-standings">
+  <div class="sec-head">
+    <div class="sec-title">Championship Standings</div>
+    <div class="chip ch-blue">2026 Season</div>
+    <div class="chip ch-green" id="standings-round-chip">After Round 2 · China</div>
+    <div class="chip ch-orange">Live · Russell leads</div>
+    <div class="sec-right">Ergast / Jolpica API · fallback 2026 data</div>
+  </div>
+  <div class="standings-outer">
+    <div class="card">
+      <div class="card-hd">🏎 Driver Championship</div>
+      <div id="drivers-table-wrap"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hd">🏭 Constructor Championship</div>
+      <div id="constructors-table-wrap"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCHEDULE ═══ -->
+<div class="panel" id="panel-schedule">
+  <div class="sec-head">
+    <div class="sec-title">2026 Season Calendar</div>
+    <div class="chip ch-blue">24 Rounds</div>
+    <div class="chip ch-orange">6 Sprint Weekends</div>
+  </div>
+  <div class="schedule-outer">
+    <div class="schedule-grid" id="schedule-grid">
+      <div class="loading"><div class="spinner"></div>Loading calendar...</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ RACE WEEKEND ═══ -->
+<div class="panel" id="panel-weekend">
+  <div class="sec-head">
+    <div class="sec-title">Race Weekend</div>
+    <div class="chip ch-blue" id="weekend-round-chip">Next Race</div>
+    <div class="chip ch-green">Live Countdown</div>
+    <div class="sec-right">Sessions · Circuit intel · Watch guide · What-if scenarios</div>
+  </div>
+  <div class="weekend-outer" id="weekend-outer" style="padding:13px">
+    <div class="loading"><div class="spinner"></div>Loading next race weekend...</div>
+  </div>
+</div>
+
+<!-- ═══ TELEMETRY ═══ -->
+<div class="panel" id="panel-telemetry">
+  <div class="sec-head">
+    <div class="sec-title">Car Telemetry</div>
+    <div class="chip ch-blue">OpenF1 Live Car Data</div>
+    <div class="chip ch-orange">Race Session Only</div>
+    <div class="sec-right">Speed · Gear · Throttle · Brake · DRS · RPM</div>
+  </div>
+  <div class="telem-outer">
+    <div class="telem-controls">
+      <span style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Driver</span>
+      <select class="telem-select" id="telem-driver-select" onchange="loadTelemetry(this.value)">
+        <option value="">Select a driver...</option>
+      </select>
+      <span style="font-size:11px;color:var(--text3)">Streams during live race sessions</span>
+      <button class="telem-btn" onclick="if(S.telemDriver) loadTelemetry(S.telemDriver)">↻ Refresh</button>
+    </div>
+    <div class="telem-grid" id="telem-grid">
+      <div class="empty-state" style="grid-column:1/-1">
+        <strong>Select a Driver Above</strong>
+        Live telemetry streams during race sessions — speed, gear, throttle, brake, DRS, RPM
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RACE DEBRIEF ═══ -->
+<div class="panel" id="panel-debrief">
+  <div class="sec-head">
+    <div class="sec-title">Race Debrief</div>
+    <div class="chip ch-blue">FastF1 + Ergast Data</div>
+    <div class="sec-right">Race selector · default race debrief · team drill-down · strategy audit</div>
+  </div>
+  <div class="debrief-outer">
+    <div>
+      <div class="sb-title">Race and Constructors</div>
+      <div class="team-list" id="team-list">
+        <div class="loading"><div class="spinner"></div>Loading...</div>
+      </div>
+    </div>
+    <div class="db-panel" id="db-panel">
+      <div class="empty-state" style="height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column">
+        <strong>← Choose a Race or Team</strong>
+        Start with the race-level debrief, then drill into any constructor
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js?v=20260316c"></script>
+<script>
+// Populate telemetry driver selector once timing data is available
+function populateTelemSelect() {
+  const sel = document.getElementById('telem-driver-select');
+  if (!S.timing?.drivers || sel.options.length > 1) return;
+  S.timing.drivers.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.driver_number;
+    opt.textContent = `${d.name_acronym} — ${d.full_name} (${d.team_name})`;
+    sel.appendChild(opt);
+  });
+}
+// Hook into timing updates to populate the select
+const _origOnTimingUpdate = window.onTimingUpdate;
+window._telemSelectReady = false;
+setInterval(() => {
+  if (!window._telemSelectReady && S.timing?.drivers) {
+    populateTelemSelect();
+    window._telemSelectReady = true;
+  }
+}, 1500);
+</script>
+</body>
+</html>

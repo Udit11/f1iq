@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F1IQ — Intelligence Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url("/static/css/main.css?v=20260316c");
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red:        #E8002D;
+  --red-bg:     #FFF0F3;
+  --red-bdr:    #FFCCD5;
+  --bg:         #F2F2F5;
+  --surface:    #FFFFFF;
+  --surface2:   #F8F8FB;
+  --surface3:   #EDEDF2;
+  --border:     #E0E0E8;
+  --border2:    #C8C8D4;
+  --text:       #181828;
+  --text2:      #58586E;
+  --text3:      #9898AE;
+  --green:      #1A7D2E;
+  --green-bg:   #EAF6EC;
+  --green-bdr:  #A8D8B0;
+  --yellow:     #8A6000;
+  --yellow-bg:  #FFF8E0;
+  --yellow-bdr: #EED070;
+  --orange:     #B04000;
+  --orange-bg:  #FFF2EA;
+  --orange-bdr: #EEB888;
+  --blue:       #0055BB;
+  --blue-bg:    #EAF1FF;
+  --blue-bdr:   #A8C4F0;
+  --purple:     #6A28A8;
+  --purple-bg:  #F4EEFF;
+  --purple-bdr: #C8A8E8;
+  --soft-c:     #E8002D;
+  --med-c:      #A07800;
+  --hard-c:     #444444;
+  --inter-c:    #1A7D2E;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 300;
+  background: var(--surface);
+  border-bottom: 3px solid var(--red);
+  display: flex; align-items: center;
+  height: 52px; padding: 0 16px; gap: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.logo {
+  font-size: 21px; font-weight: 900; color: var(--red);
+  letter-spacing: 2px; margin-right: 10px;
+}
+.logo em { font-style: normal; color: var(--text); }
+.top-sep { width: 1px; height: 22px; background: var(--border2); margin: 0 8px; }
+.nav-tab {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
+  text-transform: uppercase; color: var(--text3);
+  padding: 0 13px; height: 52px;
+  display: flex; align-items: center;
+  cursor: pointer; border-bottom: 3px solid transparent;
+  margin-bottom: -3px; transition: color .14s, border-color .14s;
+  white-space: nowrap; user-select: none;
+}
+.nav-tab:hover { color: var(--text2); }
+.nav-tab.active { color: var(--text); border-bottom-color: var(--red); }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.live-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--green-bg); border: 1px solid var(--green-bdr);
+  border-radius: 4px; padding: 4px 9px;
+  font-size: 11px; font-weight: 700; color: var(--green);
+}
+.live-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: blink 1.5s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.race-name { font-size: 12px; font-weight: 700; color: var(--text); }
+.race-sub  { font-size: 10px; color: var(--text2); margin-top: 1px; }
+
+/* ── PANELS ── */
+.panel { display: none; animation: fadein .16s ease; }
+.panel.active { display: block; }
+@keyframes fadein { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── SHARED ── */
+.sec-head {
+  display: flex; align-items: center; gap: 9px;
+  padding: 13px 16px 10px; border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.sec-title { font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+.chip {
+  font-size: 10px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 3px; border: 1px solid;
+}
+.ch-red    { color: var(--red);    border-color: var(--red-bdr);    background: var(--red-bg); }
+.ch-green  { color: var(--green);  border-color: var(--green-bdr);  background: var(--green-bg); }
+.ch-blue   { color: var(--blue);   border-color: var(--blue-bdr);   background: var(--blue-bg); }
+.ch-orange { color: var(--orange); border-color: var(--orange-bdr); background: var(--orange-bg); }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.card-hd {
+  padding: 9px 13px; border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text2);
+  display: flex; align-items: center; gap: 7px;
+}
+.card-bd { padding: 12px 13px; }
+
+/* ─────────────────────────── */
+/* DASHBOARD PANEL             */
+/* ─────────────────────────── */
+.dash-outer { padding: 13px; display: flex; flex-direction: column; gap: 12px; }
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+@media(max-width:960px){ .stat-row{ grid-template-columns: repeat(3,1fr); } }
+
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 14px;
+}
+.stat-val { font-size: 26px; font-weight: 900; color: var(--text); display: block; line-height: 1.1; }
+.stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--text3); margin-top: 3px; }
+.stat-sub { font-size: 11px; font-weight: 700; margin-top: 4px; }
+.sub-up   { color: var(--green); }
+.sub-down { color: var(--red); }
+.sub-neu  { color: var(--text3); }
+
+.dash-cols {
+  display: grid;
+  grid-template-columns: 290px 1fr 270px;
+  gap: 12px;
+}
+@media(max-width:1080px){ .dash-cols{ grid-template-columns: 1fr 1fr; } }
+@media(max-width:680px) { .dash-cols{ grid-template-columns: 1fr; } }
+
+/* mini tower */
+.mini-tower { display: flex; flex-direction: column; gap: 3px; }
+.mini-row {
+  display: grid;
+  grid-template-columns: 22px 6px 38px 1fr 62px 28px;
+  align-items: center; gap: 5px;
+  padding: 5px 8px; border-radius: 4px;
+  background: var(--surface2); border: 1px solid var(--border);
+  cursor: pointer; transition: background .12s;
+  font-size: 12px;
+}
+.mini-row:hover { background: var(--surface3); }
+.mini-row.lead { border-left: 3px solid var(--yellow-bdr); }
+.m-pos { font-size: 14px; font-weight: 900; text-align: center; color: var(--text3); }
+.m-pos.gold { color: var(--yellow); }
+.m-stripe { width: 4px; height: 26px; border-radius: 2px; flex-shrink: 0; }
+.m-abbr { font-size: 13px; font-weight: 900; }
+.m-team { font-size: 10px; color: var(--text3); }
+.m-gap  { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text2); }
+.m-tyre {
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: 9px; font-weight: 900; border: 2px solid;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.m-tyre.S { border-color: var(--soft-c);  color: var(--soft-c);  background: var(--red-bg); }
+.m-tyre.M { border-color: var(--med-c);   color: var(--med-c);   background: var(--yellow-bg); }
+.m-tyre.H { border-color: var(--hard-c);  color: var(--hard-c);  background: var(--surface3); }
+.m-tyre.I { border-color: var(--inter-c); color: var(--inter-c); background: var(--green-bg); }
+
+/* centre column */
+.centre-col { display: flex; flex-direction: column; gap: 12px; }
+
+.fl-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px; background: var(--purple-bg);
+  border: 1px solid var(--purple-bdr); border-radius: 6px; margin-bottom: 10px;
+}
+.fl-abbr { font-size: 22px; font-weight: 900; color: var(--purple); }
+.fl-time { font-size: 18px; font-weight: 900; font-family: 'Courier New', monospace; color: var(--purple); }
+.fl-note { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+.sector-bars { display: flex; flex-direction: column; gap: 7px; }
+.sec-bar-row { display: grid; grid-template-columns: 28px 1fr 68px; align-items: center; gap: 8px; }
+.sec-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text3); }
+.sec-bg { height: 14px; background: var(--surface3); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.sec-fill { height: 100%; border-radius: 3px; }
+.sec-time { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text); text-align: right; }
+
+.chart-h200 { position: relative; height: 200px; }
+.chart-h240 { position: relative; height: 240px; }
+.chart-h260 { position: relative; height: 260px; }
+
+/* right column */
+.right-col { display: flex; flex-direction: column; gap: 12px; }
+
+.wx-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.wx-row:last-child { border: none; }
+.wx-k { font-size: 12px; color: var(--text2); }
+.wx-v { font-size: 12px; font-weight: 700; }
+
+.prob-row { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+.prob-name { font-size: 12px; font-weight: 900; width: 36px; flex-shrink: 0; }
+.prob-bg { flex: 1; height: 20px; background: var(--surface3); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.prob-bar {
+  height: 100%; border-radius: 3px;
+  display: flex; align-items: center; padding-left: 6px;
+  font-size: 10px; font-weight: 700;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+.prob-pct { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text2); width: 32px; text-align: right; flex-shrink: 0; }
+
+.pw-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+}
+.pw-row:last-child { border: none; }
+.pw-abbr { font-size: 13px; font-weight: 900; width: 34px; }
+.pw-window { font-weight: 700; }
+.pw-note { font-size: 10px; color: var(--text3); }
+
+/* ─────────────────────────── */
+/* TIMING TOWER PANEL          */
+/* ─────────────────────────── */
+.tower-outer { padding: 12px; }
+.tower-hd {
+  display: grid;
+  grid-template-columns: 26px 6px 46px 1fr 70px 70px 78px 88px 42px 78px;
+  gap: 0 8px; padding: 4px 10px 6px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .4px; color: var(--text3);
+  border-bottom: 1px solid var(--border); margin-bottom: 4px;
+}
+.tower-body { display: flex; flex-direction: column; gap: 3px; }
+.d-row {
+  display: grid;
+  grid-template-columns: 26px 6px 46px 1fr 70px 70px 78px 88px 42px 78px;
+  align-items: center; gap: 0 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 5px;
+  padding: 6px 10px; cursor: pointer; transition: background .12s, border-color .12s;
+}
+.d-row:hover { background: var(--surface2); border-color: var(--border2); }
+.d-row.lead { border-left: 3px solid var(--yellow-bdr); }
+.d-row.pitrow { background: var(--orange-bg); border-color: var(--orange-bdr); }
+.d-row.dnfrow { opacity: .38; }
+
+.d-pos { font-size: 16px; font-weight: 900; text-align: center; color: var(--text3); }
+.d-pos.p1 { color: var(--yellow); }
+.d-pos.p2 { color: #888; }
+.d-pos.p3 { color: #A05828; }
+.d-stripe { width: 5px; height: 28px; border-radius: 2px; flex-shrink: 0; }
+.d-abbr { font-size: 15px; font-weight: 900; }
+.d-nm   { font-size: 12px; font-weight: 600; }
+.d-tm   { font-size: 10px; color: var(--text3); }
+
+.mono { font-family: 'Courier New', monospace; font-size: 12px; }
+.mono.purple { color: var(--purple); font-weight: 700; }
+.mono.green  { color: var(--green);  font-weight: 700; }
+.mono.gold   { color: var(--yellow); font-weight: 700; }
+.col-sub { font-size: 10px; color: var(--text3); }
+
+.tyre-b {
+  width: 23px; height: 23px; border-radius: 50%;
+  font-size: 9px; font-weight: 900; border: 2px solid;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.tyre-b.S { border-color: var(--soft-c);  color: var(--soft-c);  background: var(--red-bg); }
+.tyre-b.M { border-color: var(--med-c);   color: var(--med-c);   background: var(--yellow-bg); }
+.tyre-b.H { border-color: var(--hard-c);  color: var(--hard-c);  background: var(--surface3); }
+.tyre-b.I { border-color: var(--inter-c); color: var(--inter-c); background: var(--green-bg); }
+
+.tyre-wrap { display: flex; align-items: center; gap: 6px; }
+.tyre-age  { font-size: 11px; font-family: 'Courier New', monospace; color: var(--text2); }
+.tyre-bar-bg { width: 50px; height: 4px; background: var(--surface3); border-radius: 2px; border: 1px solid var(--border); }
+.tyre-fill   { height: 4px; border-radius: 2px; transition: width .5s; }
+
+.ind-grp { display: flex; gap: 3px; }
+.ind {
+  font-size: 9px; font-weight: 900; letter-spacing: .3px;
+  padding: 2px 5px; border-radius: 2px; border: 1px solid; text-transform: uppercase;
+}
+.ind-drs { color: var(--green);  border-color: var(--green-bdr);  background: var(--green-bg); }
+.ind-pit { color: var(--orange); border-color: var(--orange-bdr); background: var(--orange-bg); }
+
+/* ─────────────────────────── */
+/* PIT STRATEGY PANEL          */
+/* ─────────────────────────── */
+.strat-outer { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.strat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.strat-hd {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 13px; background: var(--surface2); border-bottom: 1px solid var(--border);
+}
+.strat-bd { padding: 12px 13px; }
+.strat-name { font-size: 15px; font-weight: 900; }
+.strat-team { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+.stint-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.stint-lbl { font-size: 10px; color: var(--text3); width: 56px; text-align: right; flex-shrink: 0; }
+.stint-track {
+  flex: 1; height: 30px; background: var(--surface3);
+  border-radius: 4px; border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.stint-seg {
+  position: absolute; top: 0; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 900; border-right: 2px solid white;
+  transition: filter .14s; cursor: pointer;
+}
+.stint-seg:hover { filter: brightness(.88); }
+.stint-seg.soft   { background: #FFCDD5; color: var(--red); }
+.stint-seg.medium { background: #FFF3B8; color: var(--yellow); }
+.stint-seg.hard   { background: #E8E8E8; color: #444; }
+.pit-pin { position: absolute; top: 0; width: 2px; height: 100%; background: var(--orange); z-index: 2; opacity: .7; }
+.lap-needle { position: absolute; top: 0; width: 2px; height: 100%; background: var(--blue); z-index: 3; }
+.stint-cur { font-size: 10px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+
+.rec-box { border-left: 4px solid; border-radius: 4px; padding: 10px 12px; }
+.rec-box.optimal { border-color: var(--green);  background: var(--green-bg); }
+.rec-box.alert   { border-color: var(--orange); background: var(--orange-bg); }
+.rec-box.danger  { border-color: var(--red);    background: var(--red-bg); }
+.rec-title { font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: .3px; margin-bottom: 4px; }
+.rec-box.optimal .rec-title { color: var(--green); }
+.rec-box.alert   .rec-title { color: var(--orange); }
+.rec-box.danger  .rec-title { color: var(--red); }
+.rec-text { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+.tac-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.tac {
+  font-size: 10px; font-weight: 900; letter-spacing: .4px; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 3px; border: 1px solid;
+}
+.tac-undercut { color: var(--blue);   border-color: var(--blue-bdr);   background: var(--blue-bg); }
+.tac-overcut  { color: var(--yellow); border-color: var(--yellow-bdr); background: var(--yellow-bg); }
+.tac-stay     { color: var(--green);  border-color: var(--green-bdr);  background: var(--green-bg); }
+.tac-pitnow   { color: var(--red);    border-color: var(--red-bdr);    background: var(--red-bg); }
+
+/* ─────────────────────────── */
+/* PREDICTOR PANEL             */
+/* ─────────────────────────── */
+.pred-outer { padding: 12px; }
+.pred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width:900px){ .pred-grid{ grid-template-columns: 1fr; } }
+.pred-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+.pred-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+  color: var(--text2); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.prob-row2 { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.prob-nm2 { font-size: 13px; font-weight: 900; width: 36px; flex-shrink: 0; }
+.prob-bg2 { flex: 1; height: 22px; background: var(--surface3); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.prob-bar2 {
+  height: 100%; border-radius: 3px;
+  display: flex; align-items: center; padding-left: 6px;
+  font-size: 11px; font-weight: 700;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+.prob-pct2 { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text2); width: 32px; text-align: right; flex-shrink: 0; }
+
+/* ─────────────────────────── */
+/* DEBRIEF PANEL               */
+/* ─────────────────────────── */
+.debrief-outer {
+  padding: 12px; display: grid;
+  grid-template-columns: 205px 1fr; gap: 12px;
+  min-height: calc(100vh - 115px);
+}
+@media(max-width:780px){ .debrief-outer{ grid-template-columns: 1fr; } }
+.sb-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--text3); padding: 0 4px 6px; }
+.team-list { display: flex; flex-direction: column; gap: 3px; }
+.t-item {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-radius: 5px; background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer; transition: all .12s;
+}
+.t-item:hover { background: var(--surface2); border-color: var(--border2); }
+.t-item.active { background: var(--surface2); border-color: var(--border2); box-shadow: inset 3px 0 0 var(--red); }
+.t-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.t-name { font-size: 12px; font-weight: 700; }
+.t-pts  { margin-left: auto; font-family: 'Courier New', monospace; font-size: 11px; color: var(--text2); }
+
+.db-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.db-band {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px; border-bottom: 1px solid var(--border); background: var(--surface2);
+}
+.db-tname { font-size: 20px; font-weight: 900; letter-spacing: .4px; }
+.db-body  { padding: 13px 15px; }
+
+.itabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 13px; }
+.itab {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  padding: 7px 13px; cursor: pointer; color: var(--text3);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .12s;
+}
+.itab:hover { color: var(--text2); }
+.itab.active { color: var(--text); border-bottom-color: var(--red); }
+.itab-pane { display: none; }
+.itab-pane.active { display: block; }
+
+.d-cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+.dbc { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 10px; }
+.dbc-nm { font-size: 14px; font-weight: 900; margin-bottom: 8px; }
+.dbc-r { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.dbc-r:last-child { border: none; }
+.dbc-k { color: var(--text2); }
+.dbc-v { font-family: 'Courier New', monospace; font-size: 11px; }
+
+.iss-list { display: flex; flex-direction: column; gap: 6px; }
+.iss-item {
+  display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px;
+  border-radius: 5px; background: var(--surface2); border: 1px solid var(--border);
+  font-size: 12px; line-height: 1.6;
+}
+.iss-tag { font-size: 9px; font-weight: 900; padding: 2px 6px; border-radius: 2px; flex-shrink: 0; margin-top: 2px; border: 1px solid; }
+.iss-p1 { color: var(--red);    border-color: var(--red-bdr);    background: var(--red-bg); }
+.iss-p2 { color: var(--orange); border-color: var(--orange-bdr); background: var(--orange-bg); }
+.iss-p3 { color: var(--yellow); border-color: var(--yellow-bdr); background: var(--yellow-bg); }
+
+.act-list { display: flex; flex-direction: column; gap: 4px; }
+.act-item {
+  display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px;
+  background: var(--surface2); border-radius: 4px;
+  font-size: 12px; color: var(--text2); line-height: 1.5;
+}
+.act-arrow { color: var(--blue); font-weight: 900; flex-shrink: 0; }
+
+.sum-txt { font-size: 12px; color: var(--text2); line-height: 1.7; margin-bottom: 14px; }
+.sub-sec-t {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+  color: var(--text3); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ════════ TOPBAR ════════ -->
+<div class="topbar">
+  <div class="logo">F1<em>IQ</em></div>
+  <div class="top-sep"></div>
+  <div class="nav-tab active" onclick="go('dash',this)">Dashboard</div>
+  <div class="nav-tab"        onclick="go('tower',this)">Live Tower</div>
+  <div class="nav-tab"        onclick="go('strategy',this)">Pit Strategy</div>
+  <div class="nav-tab"        onclick="go('predictor',this)">Race Predictor</div>
+  <div class="nav-tab"        onclick="go('debrief',this)">Race Debrief</div>
+  <div class="topbar-right">
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+    <div>
+      <div class="race-name">2025 Monaco Grand Prix</div>
+      <div class="race-sub" id="race-sub">Lap 42 / 78 · Safety Car · <span id="clk"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!--  PANEL: DASHBOARD                   -->
+<!-- ════════════════════════════════════ -->
+<div class="panel active" id="panel-dash">
+  <div class="sec-head">
+    <div class="sec-title">Race Overview</div>
+    <div class="chip ch-red">Safety Car</div>
+    <div class="chip ch-green">Lap 42 / 78</div>
+    <div class="chip ch-blue">Monaco · 3.337 km · Street Circuit</div>
+    <span style="margin-left:auto;font-size:10px;color:var(--text3)">All data sourced from OpenF1 / FastF1 / Ergast</span>
+  </div>
+  <div class="dash-outer">
+
+    <!-- STAT STRIP -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <span class="stat-val" style="color:var(--red)">42</span>
+        <div class="stat-lbl">Current Lap</div>
+        <div class="stat-sub sub-neu">of 78 total</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" style="font-size:20px">1:13.456</span>
+        <div class="stat-lbl">Fastest Lap</div>
+        <div class="stat-sub sub-up">▲ VER — Lap 38</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val">302</span>
+        <div class="stat-lbl">Top Speed km/h</div>
+        <div class="stat-sub sub-neu">VER · Sector 1</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" style="color:var(--orange)">SC</span>
+        <div class="stat-lbl">Track Status</div>
+        <div class="stat-sub sub-down">Safety Car Active</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val">7</span>
+        <div class="stat-lbl">Pit Stops Today</div>
+        <div class="stat-sub sub-neu">Avg stop 2.4s</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val">22°</span>
+        <div class="stat-lbl">Air Temp</div>
+        <div class="stat-sub sub-neu">Track 38° · Dry</div>
+      </div>
+    </div>
+
+    <!-- 3-COL AREA -->
+    <div class="dash-cols">
+
+      <!-- LEFT: mini timing tower -->
+      <div class="card">
+        <div class="card-hd">
+          ▶ Live Standings (Top 10)
+          <span style="margin-left:auto;font-size:10px;color:var(--blue);cursor:pointer;font-weight:700" onclick="go('tower',document.querySelectorAll('.nav-tab')[1])">Full Tower →</span>
+        </div>
+        <div class="card-bd" style="padding:8px">
+          <div class="mini-tower" id="mini-tower"></div>
+        </div>
+      </div>
+
+      <!-- CENTRE -->
+      <div class="centre-col">
+
+        <!-- Fastest lap + sectors -->
+        <div class="card">
+          <div class="card-hd">⚡ Fastest Lap &amp; Sector Times</div>
+          <div class="card-bd">
+            <div class="fl-row">
+              <div>
+                <div class="fl-abbr">VER</div>
+                <div style="font-size:11px;color:var(--text2)">Max Verstappen</div>
+              </div>
+              <div>
+                <div class="fl-time">1:13.456</div>
+                <div class="fl-note">Lap 38 · Medium tyre (Lap 20) · Red Bull Racing</div>
+              </div>
+              <div style="margin-left:auto"><div class="chip ch-blue">FL</div></div>
+            </div>
+            <div class="sector-bars">
+              <div class="sec-bar-row">
+                <div class="sec-lbl">S1</div>
+                <div class="sec-bg"><div class="sec-fill" style="width:88%;background:var(--purple-bdr)"></div></div>
+                <div class="sec-time">28.112</div>
+              </div>
+              <div class="sec-bar-row">
+                <div class="sec-lbl">S2</div>
+                <div class="sec-bg"><div class="sec-fill" style="width:94%;background:var(--red-bdr)"></div></div>
+                <div class="sec-time" style="color:var(--red);font-weight:700">21.334 ★</div>
+              </div>
+              <div class="sec-bar-row">
+                <div class="sec-lbl">S3</div>
+                <div class="sec-bg"><div class="sec-fill" style="width:82%;background:var(--green-bdr)"></div></div>
+                <div class="sec-time">24.010</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gap to leader chart -->
+        <div class="card">
+          <div class="card-hd">📈 Gap to Leader — Top 5 Drivers</div>
+          <div class="card-bd">
+            <div class="chart-h200"><canvas id="dashGapChart"></canvas></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="right-col">
+
+        <!-- Weather -->
+        <div class="card">
+          <div class="card-hd">🌤 Weather &amp; Track Conditions</div>
+          <div class="card-bd">
+            <div class="wx-row"><span class="wx-k">Air Temperature</span><span class="wx-v">22 °C</span></div>
+            <div class="wx-row"><span class="wx-k">Track Temperature</span><span class="wx-v">38 °C</span></div>
+            <div class="wx-row"><span class="wx-k">Humidity</span><span class="wx-v">58%</span></div>
+            <div class="wx-row"><span class="wx-k">Wind Speed</span><span class="wx-v">12 km/h NW</span></div>
+            <div class="wx-row"><span class="wx-k">Conditions</span><span class="wx-v" style="color:var(--green)">Dry ☀</span></div>
+            <div class="wx-row"><span class="wx-k">Rain Probability</span><span class="wx-v">4%</span></div>
+            <div class="wx-row"><span class="wx-k">Nominated Tyres</span><span class="wx-v">S / M / H</span></div>
+          </div>
+        </div>
+
+        <!-- Win probability snapshot -->
+        <div class="card">
+          <div class="card-hd">
+            🏆 Win Probability
+            <span style="margin-left:auto;font-size:10px;color:var(--blue);cursor:pointer;font-weight:700" onclick="go('predictor',document.querySelectorAll('.nav-tab')[3])">Full Model →</span>
+          </div>
+          <div class="card-bd" id="dash-probs"></div>
+        </div>
+
+        <!-- Next pit windows -->
+        <div class="card">
+          <div class="card-hd">
+            🔧 Upcoming Pit Windows
+            <span style="margin-left:auto;font-size:10px;color:var(--blue);cursor:pointer;font-weight:700" onclick="go('strategy',document.querySelectorAll('.nav-tab')[2])">Strategy →</span>
+          </div>
+          <div class="card-bd" id="dash-pits"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!--  PANEL: LIVE TOWER                  -->
+<!-- ════════════════════════════════════ -->
+<div class="panel" id="panel-tower">
+  <div class="sec-head">
+    <div class="sec-title">Live Timing Tower</div>
+    <div class="chip ch-red">Safety Car</div>
+    <div class="chip ch-green">Lap 42 / 78</div>
+    <div class="chip ch-blue">Monaco · Circuit de Monaco</div>
+  </div>
+  <div class="tower-outer">
+    <div class="tower-hd">
+      <span>P</span><span></span><span>Driver</span><span>Name / Team</span>
+      <span>Gap</span><span>Interval</span><span>Best Lap</span>
+      <span>Tyre / Age</span><span>DRS</span><span>Last Lap</span>
+    </div>
+    <div class="tower-body" id="tower-body"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!--  PANEL: PIT STRATEGY                -->
+<!-- ════════════════════════════════════ -->
+<div class="panel" id="panel-strategy">
+  <div class="sec-head">
+    <div class="sec-title">Pit Strategy Optimizer</div>
+    <div class="chip ch-blue">Lap 42 / 78</div>
+    <div class="chip ch-red">Monaco · 78 Laps Total</div>
+    <span style="margin-left:auto;font-size:11px;color:var(--text3)">Hover stint bars for details · Click tactics to simulate</span>
+  </div>
+  <div class="strat-outer" id="strat-body"></div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!--  PANEL: WIN PREDICTOR               -->
+<!-- ════════════════════════════════════ -->
+<div class="panel" id="panel-predictor">
+  <div class="sec-head">
+    <div class="sec-title">Race Win Predictor</div>
+    <div class="chip ch-blue">ML + Live Telemetry</div>
+    <div class="chip ch-green">Model Confidence 87%</div>
+  </div>
+  <div class="pred-outer">
+    <div class="pred-grid">
+      <div class="pred-card" style="grid-column:1/-1">
+        <div class="pred-title">Win Probability — Lap 42 of 78</div>
+        <div id="full-probs"></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Lap Time Delta vs Leader (s)</div>
+        <div class="chart-h260"><canvas id="lapDeltaChart"></canvas></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Predictor Feature Importance (%)</div>
+        <div class="chart-h260"><canvas id="featureChart"></canvas></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Tyre Life — Laps on Current Compound</div>
+        <div class="chart-h200"><canvas id="tyreChart"></canvas></div>
+      </div>
+      <div class="pred-card">
+        <div class="pred-title">Position History — Top 5 (Laps 1–42)</div>
+        <div class="chart-h200"><canvas id="posChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!--  PANEL: RACE DEBRIEF                -->
+<!-- ════════════════════════════════════ -->
+<div class="panel" id="panel-debrief">
+  <div class="sec-head">
+    <div class="sec-title">Race Debrief</div>
+    <div class="chip ch-blue">Post-Race Analysis</div>
+    <span style="font-size:11px;color:var(--text3);margin-left:6px">Select a constructor to view their full debrief</span>
+  </div>
+  <div class="debrief-outer">
+    <div>
+      <div class="sb-title">Constructors</div>
+      <div class="team-list" id="team-list"></div>
+    </div>
+    <div class="db-panel" id="db-panel">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text3);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px">
+        ← Select a team
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+// DATA
+// ══════════════════════════════
+const DRIVERS = [
+  {pos:1, abbr:'VER',name:'Max Verstappen',       team:'Red Bull',   tc:'#3671C6',tyre:'M',age:18,gap:'LEADER', int:'—',      best:'1:13.456',last:'1:14.012',drs:false,pit:false,dnf:false},
+  {pos:2, abbr:'NOR',name:'Lando Norris',          team:'McLaren',    tc:'#CC6000',tyre:'M',age:18,gap:'+3.412', int:'+3.412', best:'1:13.512',last:'1:13.889',drs:true, pit:false,dnf:false},
+  {pos:3, abbr:'LEC',name:'Charles Leclerc',       team:'Ferrari',    tc:'#CC0020',tyre:'S',age:8, gap:'+5.890', int:'+2.478', best:'1:13.601',last:'1:13.744',drs:true, pit:false,dnf:false},
+  {pos:4, abbr:'PIA',name:'Oscar Piastri',         team:'McLaren',    tc:'#CC6000',tyre:'H',age:32,gap:'+9.341', int:'+3.451', best:'1:13.788',last:'1:14.200',drs:false,pit:false,dnf:false},
+  {pos:5, abbr:'HAM',name:'Lewis Hamilton',        team:'Ferrari',    tc:'#CC0020',tyre:'M',age:22,gap:'+12.104',int:'+2.763', best:'1:13.902',last:'1:14.122',drs:false,pit:false,dnf:false},
+  {pos:6, abbr:'RUS',name:'George Russell',        team:'Mercedes',   tc:'#009980',tyre:'M',age:18,gap:'+14.888',int:'+2.784', best:'1:14.001',last:'1:14.388',drs:false,pit:false,dnf:false},
+  {pos:7, abbr:'SAI',name:'Carlos Sainz',          team:'Williams',   tc:'#0055AA',tyre:'S',age:5, gap:'+18.234',int:'+3.346', best:'1:14.188',last:'1:13.901',drs:false,pit:false,dnf:false},
+  {pos:8, abbr:'ANT',name:'Kimi Antonelli',        team:'Mercedes',   tc:'#009980',tyre:'H',age:42,gap:'+22.001',int:'+3.767', best:'1:14.300',last:'1:14.911',drs:false,pit:false,dnf:false},
+  {pos:9, abbr:'ALO',name:'Fernando Alonso',       team:'Aston M.',   tc:'#287A5A',tyre:'M',age:14,gap:'+24.550',int:'+2.549', best:'1:14.422',last:'1:14.601',drs:false,pit:false,dnf:false},
+  {pos:10,abbr:'TSU',name:'Yuki Tsunoda',          team:'Red Bull',   tc:'#3671C6',tyre:'S',age:10,gap:'+27.112',int:'+2.562', best:'1:14.567',last:'1:14.388',drs:false,pit:false,dnf:false},
+  {pos:11,abbr:'ALB',name:'Alexander Albon',       team:'Williams',   tc:'#0055AA',tyre:'M',age:24,gap:'+31.006',int:'+3.894', best:'1:14.788',last:'1:14.950',drs:false,pit:false,dnf:false},
+  {pos:12,abbr:'GAS',name:'Pierre Gasly',          team:'Alpine',     tc:'#0080B0',tyre:'H',age:38,gap:'+33.412',int:'+2.406', best:'1:14.902',last:'1:15.100',drs:false,pit:false,dnf:false},
+  {pos:13,abbr:'HUL',name:'Nico Hülkenberg',       team:'Sauber',     tc:'#228822',tyre:'M',age:20,gap:'+36.220',int:'+2.808', best:'1:15.011',last:'1:15.200',drs:false,pit:false,dnf:false},
+  {pos:14,abbr:'OCO',name:'Esteban Ocon',          team:'Haas',       tc:'#888888',tyre:'S',age:12,gap:'+39.001',int:'+2.781', best:'1:15.188',last:'1:14.900',drs:false,pit:false,dnf:false},
+  {pos:15,abbr:'BEA',name:'Oliver Bearman',        team:'Haas',       tc:'#888888',tyre:'H',age:42,gap:'+42.330',int:'+3.329', best:'1:15.340',last:'1:15.600',drs:false,pit:false,dnf:false},
+  {pos:16,abbr:'DOO',name:'Jack Doohan',           team:'Alpine',     tc:'#0080B0',tyre:'M',age:18,gap:'+45.112',int:'+2.782', best:'1:15.501',last:'1:15.780',drs:false,pit:false,dnf:false},
+  {pos:17,abbr:'BOR',name:'Gabriel Bortoleto',     team:'Sauber',     tc:'#228822',tyre:'S',age:8, gap:'+48.009',int:'+2.897', best:'1:15.622',last:'1:15.400',drs:false,pit:false,dnf:false},
+  {pos:18,abbr:'HAD',name:'Isack Hadjar',          team:'RB',         tc:'#4455DD',tyre:'M',age:22,gap:'+51.332',int:'+3.323', best:'1:15.800',last:'1:16.100',drs:false,pit:false,dnf:false},
+  {pos:19,abbr:'LAW',name:'Liam Lawson',           team:'RB',         tc:'#4455DD',tyre:'H',age:40,gap:'+55.001',int:'+3.669', best:'1:15.955',last:'1:16.350',drs:false,pit:false,dnf:false},
+  {pos:20,abbr:'STR',name:'Lance Stroll',          team:'Aston M.',   tc:'#287A5A',tyre:'S',age:6, gap:'+2 Laps',int:'+1 Lap', best:'1:15.012',last:'1:16.800',drs:false,pit:false,dnf:true},
+];
+
+const WIN_PROBS = [
+  {abbr:'VER',pct:52,color:'#3671C6'},
+  {abbr:'NOR',pct:24,color:'#CC6000'},
+  {abbr:'LEC',pct:13,color:'#CC0020'},
+  {abbr:'PIA',pct:5, color:'#CC6000'},
+  {abbr:'HAM',pct:4, color:'#CC0020'},
+  {abbr:'RUS',pct:2, color:'#009980'},
+];
+
+const PIT_WINDOWS = [
+  {abbr:'NOR',window:'Laps 44–48',urgency:'alert',  note:'Undercut window vs leader'},
+  {abbr:'PIA',window:'Lap 45–47', urgency:'danger', note:'Tyre cliff imminent'},
+  {abbr:'HAM',window:'Laps 46–52',urgency:'alert',  note:'Monitor degradation'},
+  {abbr:'RUS',window:'Laps 50–56',urgency:'optimal',note:'Comfortable margin'},
+];
+
+const STRATEGIES = [
+  {abbr:'VER',name:'Max Verstappen', team:'Red Bull', tc:'#3671C6',
+   stints:[{t:'S',s:0,l:14},{t:'M',s:14,l:28},{t:'M',s:42,l:36}],pits:[14,42],cur:42,total:78,
+   rec:{type:'optimal',title:'Stay Out — Overcut Window Open',
+    text:'VER leads by 3.4s. Safety car bunches the field. Recommend extending current Medium stint to lap 58–62. Overcut rivals pitting in this window. Predicted remaining tyre life: 24 laps.',tacs:['overcut','stay']}},
+  {abbr:'NOR',name:'Lando Norris',   team:'McLaren', tc:'#CC6000',
+   stints:[{t:'S',s:0,l:14},{t:'M',s:14,l:28}],pits:[14],cur:42,total:78,
+   rec:{type:'alert',title:'Pit Window: Laps 44–48 Optimal',
+    text:'NOR P2, 3.4s off leader. Medium on 28 laps — approaching degradation cliff. Undercut VER by pitting laps 44–48. 2-stop viable: Medium → Hard for final 36 laps.',tacs:['undercut','pit-now']}},
+  {abbr:'LEC',name:'Charles Leclerc',team:'Ferrari',  tc:'#CC0020',
+   stints:[{t:'S',s:0,l:20},{t:'S',s:20,l:22},{t:'S',s:42,l:36}],pits:[20,42],cur:42,total:78,
+   rec:{type:'optimal',title:'Fresh Softs — Attack Mode',
+    text:'LEC pitted for fresh Softs at lap 42. 3-stop strategy confirmed. 8-lap tyre advantage vs P1/P2. Monaco pace on fresh Softs: +0.4s/lap delta. Target overtake window laps 54–58.',tacs:['stay','overcut']}},
+  {abbr:'PIA',name:'Oscar Piastri',  team:'McLaren', tc:'#CC6000',
+   stints:[{t:'S',s:0,l:10},{t:'H',s:10,l:32}],pits:[10],cur:42,total:78,
+   rec:{type:'danger',title:'⚠ Tyre at Critical Degradation',
+    text:'PIA on 32-lap Hard — significantly beyond optimal window. Lap delta widening at +0.08s per lap. MUST pit before lap 50. Hard → Medium for final 28 laps preferred. Blistering risk imminent.',tacs:['pit-now']}},
+  {abbr:'HAM',name:'Lewis Hamilton', team:'Ferrari', tc:'#CC0020',
+   stints:[{t:'S',s:0,l:8},{t:'M',s:8,l:34}],pits:[8],cur:42,total:78,
+   rec:{type:'alert',title:'1-Stop vs 2-Stop Decision Required',
+    text:'HAM P5 on 22-lap Medium. 1-stop: extend to lap 62, Hard for final 16 laps. 2-stop: pit now for Medium, 36 laps to end — higher risk, higher reward. Decision window closes lap 46.',tacs:['stay','undercut']}},
+];
+
+const TEAMS = [
+  {name:'Red Bull Racing',  color:'#3671C6',pts:342,
+   drivers:[
+    {name:'Max Verstappen',abbr:'VER',pos:'1st',qual:'1st',fl:'1:13.456',stops:2,avg:'1:14.2',notes:'Minor front wing damage lap 34'},
+    {name:'Yuki Tsunoda',  abbr:'TSU',pos:'10th',qual:'12th',fl:'1:14.567',stops:2,avg:'1:15.1',notes:'MGUK deployment issue laps 22–28'},
+   ],
+   summary:'Strong strategic execution. VER dominant throughout all stints. TSU recovered from DRS failure in sector 2. Undercut on lap 14 secured track position over rival. Pit stop average: 2.3s — best in paddock.',
+   issues:[
+    {p:'P2',text:'Front wing endplate damage detected lap 34 — 0.07s aero balance loss. Managed to end of race.'},
+    {p:'P3',text:'TSU MGUK deployment restricted laps 22–28. Full investigation required on Monaco power unit specification.'},
+   ],
+   actions:['Review MGUK telemetry logs for laps 22–28 to identify deployment anomaly','Front wing damage origin analysis — suspected kerb contact at Casino Square','VER Monaco setup package retained for Singapore (similar street circuit characteristics)','Update undercut model with revised tyre degradation data from this event']
+  },
+  {name:'Scuderia Ferrari', color:'#CC0020',pts:289,
+   drivers:[
+    {name:'Charles Leclerc',abbr:'LEC',pos:'3rd',qual:'2nd',fl:'1:13.601',stops:3,avg:'1:14.5',notes:'DRS failure Q3, aggressive 3-stop strategy'},
+    {name:'Lewis Hamilton', abbr:'HAM',pos:'5th',qual:'4th',fl:'1:13.902',stops:2,avg:'1:14.8',notes:'Wheelspin on SC restart lap 38'},
+   ],
+   summary:'Strong qualifying result. LEC ran aggressive 3-stop on Softs — impressive pace but track position costly. HAM managed well on 2-stop. Combined 8 points from Monaco remains below target.',
+   issues:[
+    {p:'P1',text:'LEC DRS failure in Q3 — impacted qualifying lap time. Root cause: hydraulic actuator seal.'},
+    {p:'P2',text:'HAM wheelspin on safety car restart lap 38 — slight flat spot front-left maintained to finish.'},
+    {p:'P3',text:'3-stop strategy for LEC resulted in track position loss. Overtaking at Monaco not viable for recovery.'},
+   ],
+   actions:['Hydraulic actuator seal replacement and full DRS system inspection pre-Canada','Analyse traction control maps for SC restart in Monaco low-grip conditions','Model 2-stop vs 3-stop delta with updated degradation curves for future street circuits','Review HAM pit stop time — 2.7s was 0.4s above internal target']
+  },
+  {name:'McLaren F1 Team',  color:'#CC6000',pts:311,
+   drivers:[
+    {name:'Lando Norris', abbr:'NOR',pos:'2nd',qual:'3rd',fl:'1:13.512',stops:1,avg:'1:14.1',notes:'Pit lane exit traffic lap 14 cost 1.8s'},
+    {name:'Oscar Piastri',abbr:'PIA',pos:'4th',qual:'5th',fl:'1:13.788',stops:1,avg:'1:14.4',notes:'Extended Hard stint — degradation risk accepted'},
+   ],
+   summary:'Excellent team result. NOR P2 on consistently strong pace. PIA 1-stop gamble nearly yielded P3. MCL39 showed best straight-line speed of season in final sector. Pit lane traffic cost NOR 1.8s vs leader.',
+   issues:[
+    {p:'P2',text:'Pit lane exit traffic on lap 14 — NOR lost 1.8s behind Albon. Stop timing algorithm needs review.'},
+    {p:'P3',text:'PIA Hard compound pushed to 44 laps — blistering risk accepted. 2-stop would have given better P3 shot.'},
+   ],
+   actions:['Pit lane exit timing algorithm update — traffic avoidance detection needs improvement','Tyre degradation model update: Hard compound at Monaco cliffs earlier than predicted (38–40 laps)','Analyse NOR sector 2 delta vs Verstappen — cornering speed in tunnel complex']
+  },
+  {name:'Mercedes-AMG F1',  color:'#009980',pts:198,
+   drivers:[
+    {name:'George Russell', abbr:'RUS',pos:'6th',qual:'6th',fl:'1:14.001',stops:2,avg:'1:14.9',notes:'Brake temperature warning laps 30–35'},
+    {name:'Kimi Antonelli', abbr:'ANT',pos:'8th',qual:'7th',fl:'1:14.300',stops:1,avg:'1:15.2',notes:'Long Hard stint — managed in tyre conservation mode'},
+   ],
+   summary:'Solid midfield result. RUS showed strong race pace after difficult qualifying. ANT impressive 1-stop discipline. W16 brake cooling requires attention — Monaco tunnel and chicane generating excess heat.',
+   issues:[
+    {p:'P1',text:'RUS front brake temperature reached 950°C laps 30–35 — thermal limit triggered, reduced front bias.'},
+    {p:'P3',text:'W16 underperforming in sector 2 (swimming pool) vs rivals — yaw balance sensitivity analysis required.'},
+   ],
+   actions:['Brake duct configuration review for Monaco / Singapore specification','W16 yaw balance calibration — rear diffuser interaction with low-speed corners','Compare ANT vs RUS suspension setup choices — identify optimal Monaco compromise']
+  },
+  {name:'Aston Martin',     color:'#287A5A',pts:87,
+   drivers:[
+    {name:'Fernando Alonso',abbr:'ALO',pos:'9th',qual:'8th',fl:'1:14.422',stops:2,avg:'1:15.3',notes:'Rear instability post safety car restart'},
+    {name:'Lance Stroll',   abbr:'STR',pos:'DNF',qual:'10th',fl:'N/A',stops:1,avg:'N/A',notes:'Hydraulic failure lap 38 — retirement'},
+   ],
+   summary:'Difficult day for the team. STR hydraulic failure costs significant championship points. ALO extracted maximum from AMR25 with 2-stop strategy. Mid-corner rear instability flagged laps 38–42.',
+   issues:[
+    {p:'P1',text:'STR hydraulic system failure lap 38. Complete retirement. Full investigation required on hydraulic circuit.'},
+    {p:'P1',text:'ALO mid-corner rear instability laps 38–42 — suspected safety car thermal cooling effect on cold tyres.'},
+    {p:'P2',text:'AMR25 struggling in slow-speed traction vs McLaren / Ferrari — power unit deployment mapping revision needed.'},
+   ],
+   actions:['Full hydraulic system autopsy on Stroll car — identify failure mode and root cause','Review SC restart thermal management protocol for all tyre compounds','Power unit deployment map revision for Monaco / Singapore low-speed circuits','Traction control mapping update based on ALO feedback from swimming pool complex']
+  },
+];
+
+// ══════════════════════════════
+// CHART HELPERS
+// ══════════════════════════════
+function cOpts(yLabel, extraY={}) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#58586E',font:{size:10,family:'Arial'},boxWidth:12,padding:8}}},
+    scales:{
+      x:{ticks:{color:'#9898AE',font:{size:10,family:'Arial'},maxTicksLimit:10},grid:{color:'rgba(0,0,0,0.06)'},border:{color:'rgba(0,0,0,0.12)'}},
+      y:{ticks:{color:'#9898AE',font:{size:10,family:'Arial'}},grid:{color:'rgba(0,0,0,0.06)'},border:{color:'rgba(0,0,0,0.12)'},
+         title:{display:!!yLabel,text:yLabel,color:'#9898AE',font:{size:10,family:'Arial'}},...extraY}
+    }
+  };
+}
+
+// ══════════════════════════════
+// RENDER: DASHBOARD
+// ══════════════════════════════
+function renderDash() {
+  // Mini tower
+  const mt = document.getElementById('mini-tower');
+  DRIVERS.slice(0,10).forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'mini-row'+(d.pos===1?' lead':'');
+    el.innerHTML = `
+      <div class="m-pos ${d.pos===1?'gold':''}">${d.pos}</div>
+      <div class="m-stripe" style="background:${d.tc}"></div>
+      <div class="m-abbr" style="color:${d.tc}">${d.abbr}</div>
+      <div><div class="m-team">${d.team}</div></div>
+      <div class="m-gap">${d.gap}</div>
+      <div class="m-tyre ${d.tyre}">${d.tyre}</div>
+    `;
+    mt.appendChild(el);
+  });
+
+  // Win probs (compact)
+  document.getElementById('dash-probs').innerHTML = WIN_PROBS.map(w=>`
+    <div class="prob-row">
+      <div class="prob-name" style="color:${w.color}">${w.abbr}</div>
+      <div class="prob-bg">
+        <div class="prob-bar" style="width:${w.pct}%;background:${w.color}28;border-left:3px solid ${w.color}">
+          <span style="color:${w.color}">${w.pct}%</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Pit windows
+  document.getElementById('dash-pits').innerHTML = PIT_WINDOWS.map(p=>{
+    const cls = p.urgency==='danger'?'ch-red':p.urgency==='alert'?'ch-orange':'ch-green';
+    const lbl = p.urgency==='danger'?'CRITICAL':p.urgency==='alert'?'ALERT':'ON TRACK';
+    return `<div class="pw-row">
+      <div class="pw-abbr" style="color:${DRIVERS.find(d=>d.abbr===p.abbr)?.tc||'#333'}">${p.abbr}</div>
+      <div style="flex:1"><div class="pw-window">${p.window}</div><div class="pw-note">${p.note}</div></div>
+      <div class="chip ${cls}">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  // Gap chart
+  const L = Array.from({length:42},(_,i)=>i+1);
+  new Chart(document.getElementById('dashGapChart').getContext('2d'),{
+    type:'line', data:{labels:L, datasets:[
+      {label:'NOR',data:L.map(l=>+(Math.sin(l*.2)*1.2+2.8+Math.random()*.2).toFixed(2)),borderColor:'#CC6000',backgroundColor:'transparent',tension:.4,borderWidth:1.5,pointRadius:0},
+      {label:'LEC',data:L.map(l=>+(Math.sin(l*.15+1)*1.5+5.1+Math.random()*.3).toFixed(2)),borderColor:'#CC0020',backgroundColor:'transparent',tension:.4,borderWidth:1.5,pointRadius:0},
+      {label:'PIA',data:L.map(l=>+(l*.08+6+Math.random()*.2).toFixed(2)),borderColor:'#CC6000',backgroundColor:'transparent',tension:.4,borderWidth:1.5,borderDash:[4,2],pointRadius:0},
+      {label:'HAM',data:L.map(l=>+(Math.cos(l*.1)*1.8+10+Math.random()*.4).toFixed(2)),borderColor:'#AA0010',backgroundColor:'transparent',tension:.4,borderWidth:1.5,borderDash:[4,2],pointRadius:0},
+    ]}, options: cOpts('Gap to Leader (s)')
+  });
+}
+
+// ══════════════════════════════
+// RENDER: TIMING TOWER
+// ══════════════════════════════
+function renderTower() {
+  const g = document.getElementById('tower-body');
+  DRIVERS.forEach(d => {
+    const health = Math.max(8, 100 - d.age*(d.tyre==='H'?1.5:d.tyre==='M'?2.2:3));
+    const hc = health>60?'var(--green)':health>30?'#A07800':'var(--red)';
+    const pc = d.pos===1?'p1':d.pos===2?'p2':d.pos===3?'p3':'';
+    const el = document.createElement('div');
+    el.className = 'd-row'+(d.pos===1?' lead':'')+(d.pit?' pitrow':'')+(d.dnf?' dnfrow':'');
+    el.innerHTML = `
+      <div class="d-pos ${pc}">${d.pos}</div>
+      <div class="d-stripe" style="background:${d.tc}"></div>
+      <div><div class="d-abbr" style="color:${d.tc}">${d.abbr}</div></div>
+      <div><div class="d-nm">${d.name}</div><div class="d-tm">${d.team}</div></div>
+      <div><div class="mono ${d.pos===1?'gold':''}">${d.gap}</div><div class="col-sub">gap</div></div>
+      <div><div class="mono">${d.int}</div><div class="col-sub">interval</div></div>
+      <div><div class="mono ${d.pos<=1?'purple':''}">${d.best}</div><div class="col-sub">best</div></div>
+      <div class="tyre-wrap">
+        <div class="tyre-b ${d.tyre}">${d.tyre}</div>
+        <div>
+          <div class="tyre-age">${d.age} laps</div>
+          <div class="tyre-bar-bg"><div class="tyre-fill" style="width:${health}%;background:${hc}"></div></div>
+        </div>
+      </div>
+      <div class="ind-grp">
+        ${d.drs?'<div class="ind ind-drs">DRS</div>':''}
+        ${d.pit?'<div class="ind ind-pit">PIT</div>':''}
+      </div>
+      <div><div class="mono ${d.pos<=3?'green':''}">${d.last}</div><div class="col-sub">last</div></div>
+    `;
+    g.appendChild(el);
+  });
+}
+
+// ══════════════════════════════
+// RENDER: STRATEGY
+// ══════════════════════════════
+function renderStrategy() {
+  const g = document.getElementById('strat-body');
+  STRATEGIES.forEach(s => {
+    const T = s.total;
+    const stintHTML = s.stints.map(st=>{
+      const l=(st.s/T*100).toFixed(1), w=(st.l/T*100).toFixed(1);
+      return `<div class="stint-seg ${st.t.toLowerCase()}" style="left:${l}%;width:${w}%" title="${st.t} compound — ${st.l} laps from lap ${st.s+1}">${st.t}</div>`;
+    }).join('')
+    + s.pits.map(p=>`<div class="pit-pin" style="left:${(p/T*100).toFixed(1)}%" title="Pit stop lap ${p}"></div>`).join('')
+    + `<div class="lap-needle" style="left:${(s.cur/T*100).toFixed(1)}%"></div>`;
+
+    const tacHTML = s.rec.tacs.map(t=>{
+      const cls=t==='undercut'?'tac-undercut':t==='overcut'?'tac-overcut':t==='stay'?'tac-stay':'tac-pitnow';
+      const lbl=t==='undercut'?'Undercut':t==='overcut'?'Overcut':t==='stay'?'Stay Out':'Pit Now';
+      return `<span class="tac ${cls}">${lbl}</span>`;
+    }).join('');
+
+    const dPos = DRIVERS.find(d=>d.abbr===s.abbr)?.pos||'?';
+    const el = document.createElement('div');
+    el.className = 'strat-card';
+    el.innerHTML = `
+      <div class="strat-hd">
+        <div style="width:5px;height:36px;border-radius:2px;background:${s.tc};flex-shrink:0"></div>
+        <div>
+          <div class="strat-name" style="color:${s.tc}">${s.abbr} <span style="color:var(--text);font-weight:600;font-size:13px">${s.name}</span></div>
+          <div class="strat-team">${s.team}</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text2)">${s.pits.length} stop${s.pits.length!==1?'s':''}</span>
+          <span class="chip ch-blue">P${dPos}</span>
+        </div>
+      </div>
+      <div class="strat-bd">
+        <div class="stint-row">
+          <div class="stint-lbl">Lap 1 → ${T}</div>
+          <div class="stint-track">${stintHTML}</div>
+          <div class="stint-cur">Lap ${s.cur}</div>
+        </div>
+        <div class="rec-box ${s.rec.type}">
+          <div class="rec-title">${s.rec.title}</div>
+          <div class="rec-text">${s.rec.text}</div>
+          <div class="tac-row">${tacHTML}</div>
+        </div>
+      </div>
+    `;
+    g.appendChild(el);
+  });
+}
+
+// ══════════════════════════════
+// RENDER: PREDICTOR
+// ══════════════════════════════
+let predDone = false;
+function renderPredictor() {
+  if(predDone) return; predDone = true;
+  const L = Array.from({length:42},(_,i)=>i+1);
+
+  document.getElementById('full-probs').innerHTML = WIN_PROBS.map(w=>`
+    <div class="prob-row2">
+      <div class="prob-nm2" style="color:${w.color}">${w.abbr}</div>
+      <div class="prob-bg2">
+        <div class="prob-bar2" style="width:${w.pct}%;background:${w.color}28;border-left:3px solid ${w.color}">
+          <span style="color:${w.color}">${w.pct}%</span>
+        </div>
+      </div>
+      <div class="prob-pct2">${w.pct}%</div>
+    </div>
+  `).join('');
+
+  new Chart(document.getElementById('lapDeltaChart').getContext('2d'),{
+    type:'line', data:{labels:L, datasets:[
+      {label:'NOR',data:L.map(l=>+(Math.sin(l*.2)*1.2+2.8+Math.random()*.2).toFixed(3)),borderColor:'#CC6000',backgroundColor:'transparent',tension:.4,borderWidth:1.5,pointRadius:0},
+      {label:'LEC',data:L.map(l=>+(Math.sin(l*.15+1)*1.5+5.1+Math.random()*.3).toFixed(3)),borderColor:'#CC0020',backgroundColor:'transparent',tension:.4,borderWidth:1.5,pointRadius:0},
+      {label:'PIA',data:L.map(l=>+(l*.08+6+Math.random()*.2).toFixed(3)),borderColor:'#CC6000',backgroundColor:'transparent',tension:.4,borderWidth:1.5,borderDash:[4,2],pointRadius:0},
+      {label:'HAM',data:L.map(l=>+(Math.cos(l*.1)*1.8+10+Math.random()*.4).toFixed(3)),borderColor:'#AA0010',backgroundColor:'transparent',tension:.4,borderWidth:1.5,borderDash:[4,2],pointRadius:0},
+    ]}, options: cOpts('Gap to Leader (s)')
+  });
+
+  new Chart(document.getElementById('featureChart').getContext('2d'),{
+    type:'bar', data:{
+      labels:['Tyre Life','Gap to Leader','Pit Window','Lap Time Avg','Track Pos.','Weather','Fuel Load','Car Speed'],
+      datasets:[{label:'Weight %',data:[28,22,18,12,9,5,4,2],
+        backgroundColor:['#CC002230','#CC600030','#0055BB30','#1A7D2E30','#3671C630','#22882230','#A0780030','#88888830'],
+        borderColor:    ['#CC0022','#CC6000','#0055BB','#1A7D2E','#3671C6','#228822','#A07800','#888888'],
+        borderWidth:1.5, borderRadius:3}]
+    }, options:{...cOpts('Weight (%)'),indexAxis:'y'}
+  });
+
+  new Chart(document.getElementById('tyreChart').getContext('2d'),{
+    type:'bar', data:{
+      labels:['VER','NOR','LEC','PIA','HAM','RUS'],
+      datasets:[{label:'Laps on Current Tyre',data:[18,28,8,32,22,18],
+        backgroundColor:['#A0780030','#A0780030','#CC002230','#88888830','#A0780030','#A0780030'],
+        borderColor:    ['#A07800','#A07800','#CC0022','#888888','#A07800','#A07800'],
+        borderWidth:1.5, borderRadius:3}]
+    }, options: cOpts('Laps on Current Tyre')
+  });
+
+  const PH = {
+    VER:[3,2,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    NOR:[5,4,3,3,3,3,3,3,3,3,2,2,2,2,2,1,3,3,3,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
+    LEC:[2,3,4,4,4,4,4,4,4,4,4,4,4,4,4,3,4,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
+    PIA:[8,7,6,5,5,5,5,5,5,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],
+    HAM:[6,8,7,7,6,6,6,6,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
+  };
+  new Chart(document.getElementById('posChart').getContext('2d'),{
+    type:'line', data:{labels:L, datasets:[
+      {label:'VER',data:PH.VER,borderColor:'#3671C6',tension:.3,borderWidth:1.5,pointRadius:0},
+      {label:'NOR',data:PH.NOR,borderColor:'#CC6000',tension:.3,borderWidth:1.5,pointRadius:0},
+      {label:'LEC',data:PH.LEC,borderColor:'#CC0020',tension:.3,borderWidth:1.5,pointRadius:0},
+      {label:'PIA',data:PH.PIA,borderColor:'#CC6000',tension:.3,borderWidth:1.5,borderDash:[3,2],pointRadius:0},
+      {label:'HAM',data:PH.HAM,borderColor:'#AA0010',tension:.3,borderWidth:1.5,borderDash:[3,2],pointRadius:0},
+    ]}, options: cOpts('Position',{reverse:true,min:1,max:8})
+  });
+}
+
+// ══════════════════════════════
+// RENDER: DEBRIEF
+// ══════════════════════════════
+function renderDebriefList() {
+  document.getElementById('team-list').innerHTML = TEAMS.map((t,i)=>`
+    <div class="t-item" id="ti-${i}" onclick="showDebrief(${i})">
+      <div class="t-dot" style="background:${t.color}"></div>
+      <div class="t-name">${t.name}</div>
+      <div class="t-pts">${t.pts} pts</div>
+    </div>
+  `).join('');
+}
+
+function showDebrief(idx) {
+  document.querySelectorAll('.t-item').forEach((e,i)=>e.classList.toggle('active',i===idx));
+  const t = TEAMS[idx];
+  const drvHTML = t.drivers.map(d=>`
+    <div class="dbc">
+      <div class="dbc-nm" style="color:${t.color}">${d.abbr} <span style="color:var(--text);font-size:12px;font-weight:600">${d.name}</span></div>
+      <div class="dbc-r"><span class="dbc-k">Race Result</span><span class="dbc-v">${d.pos}</span></div>
+      <div class="dbc-r"><span class="dbc-k">Qualifying</span><span class="dbc-v">${d.qual}</span></div>
+      <div class="dbc-r"><span class="dbc-k">Fastest Lap</span><span class="dbc-v">${d.fl}</span></div>
+      <div class="dbc-r"><span class="dbc-k">Pit Stops</span><span class="dbc-v">${d.stops}</span></div>
+      <div class="dbc-r"><span class="dbc-k">Average Lap</span><span class="dbc-v">${d.avg}</span></div>
+      <div class="dbc-r"><span class="dbc-k">Notes</span><span class="dbc-v" style="font-size:10px;text-align:right;max-width:130px">${d.notes}</span></div>
+    </div>`).join('');
+  const issHTML = t.issues.map(i=>`
+    <div class="iss-item">
+      <span class="iss-tag iss-${i.p.toLowerCase()}">${i.p}</span><span>${i.text}</span>
+    </div>`).join('');
+  const actHTML = t.actions.map(a=>`
+    <div class="act-item"><span class="act-arrow">→</span><span>${a}</span></div>`).join('');
+
+  document.getElementById('db-panel').innerHTML = `
+    <div class="db-band">
+      <div style="width:5px;height:44px;background:${t.color};border-radius:3px;flex-shrink:0"></div>
+      <div>
+        <div class="db-tname" style="color:${t.color}">${t.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${t.pts} Championship Points &nbsp;·&nbsp; Monaco Grand Prix 2025 &nbsp;·&nbsp; Post-Race Debrief</div>
+      </div>
+    </div>
+    <div class="db-body">
+      <div class="itabs">
+        <div class="itab active" onclick="switchItab(this,'s-${idx}')">Summary</div>
+        <div class="itab"        onclick="switchItab(this,'i-${idx}')">Issues</div>
+        <div class="itab"        onclick="switchItab(this,'a-${idx}')">Action Items</div>
+      </div>
+      <div class="itab-pane active" id="s-${idx}">
+        <p class="sum-txt">${t.summary}</p>
+        <div class="sub-sec-t">Driver Performance</div>
+        <div class="d-cmp">${drvHTML}</div>
+      </div>
+      <div class="itab-pane" id="i-${idx}">
+        <div class="sub-sec-t">Issues &amp; Incidents</div>
+        <div class="iss-list">${issHTML}</div>
+      </div>
+      <div class="itab-pane" id="a-${idx}">
+        <div class="sub-sec-t">Action Items for Next Race</div>
+        <div class="act-list">${actHTML}</div>
+      </div>
+    </div>
+  `;
+}
+
+function switchItab(el, id) {
+  el.parentElement.querySelectorAll('.itab').forEach(t=>t.classList.remove('active'));
+  el.closest('.db-body').querySelectorAll('.itab-pane').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id)?.classList.add('active');
+}
+
+// ══════════════════════════════
+// NAVIGATION
+// ══════════════════════════════
+function go(name, tabEl) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(tabEl) tabEl.classList.add('active');
+  if(name==='predictor') renderPredictor();
+}
+
+// ══════════════════════════════
+// LIVE CLOCK
+// ══════════════════════════════
+(function tick(){
+  const n=new Date();
+  document.getElementById('clk').textContent =
+    n.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' (UTC+1)';
+  setTimeout(tick,1000);
+})();
+
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+renderDash();
+renderTower();
+renderStrategy();
+renderDebriefList();
+</script>
+</body>
+</html>
